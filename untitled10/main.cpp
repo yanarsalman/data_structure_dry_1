@@ -579,13 +579,13 @@ void AVL_Tree<T>::printLevelOrder() {
     }
     std::cout << "---------------------------------------------------------------------" << std::endl;
 }
-class group_node
+class nodeContainingTree
 {
 public:
-    group_node* leftSon;
-    group_node* rightSon;
-    group_node* father;
-    AVL_Tree<Node<group_node>> members;
+    nodeContainingTree* leftSon;
+    nodeContainingTree* rightSon;
+    nodeContainingTree* father;
+    AVL_Tree<Node<nodeContainingTree>> members;
     int key;
     int content;
     bool isVip;
@@ -603,37 +603,37 @@ public:
     int DramaWatched;
     int ActionWatched;
 
-    group_node():content(0),leftSon(nullptr),rightSon(nullptr),
+    nodeContainingTree():content(0),leftSon(nullptr),rightSon(nullptr),
     father(nullptr),numOfRightSons(0),numOfLeftSons(0),height(0),key(0), isVip(0),
     views(0), ComedyViews(0), FantasyViews(0), DramaViews(0), moviesWatched(0) , ActionViews(0)
-    ,ComedyWatched(0), ActionWatched(0), FantasyWatched(0),DramaWatched(0){members = AVL_Tree<Node<group_node>>();}
-    group_node(int key1, int content1,group_node* father1):content(content1),leftSon(nullptr),rightSon(nullptr),
+    ,ComedyWatched(0), ActionWatched(0), FantasyWatched(0),DramaWatched(0){members = AVL_Tree<Node<nodeContainingTree>>();}
+    nodeContainingTree(int key1, int content1,nodeContainingTree* father1):content(content1),leftSon(nullptr),rightSon(nullptr),
     father(father1),numOfRightSons(0),numOfLeftSons(0),height(0),key(key1), isVip(0),
     views(0), ComedyViews(0), FantasyViews(0), DramaViews(0), moviesWatched(0), ActionViews(0)
-    ,ComedyWatched(0), ActionWatched(0), FantasyWatched(0),DramaWatched(0){members = AVL_Tree<Node<group_node>>();}
-    group_node(int key1):content(0),leftSon(nullptr),rightSon(nullptr),
+    ,ComedyWatched(0), ActionWatched(0), FantasyWatched(0),DramaWatched(0){members = AVL_Tree<Node<nodeContainingTree>>();}
+    nodeContainingTree(int key1):content(0),leftSon(nullptr),rightSon(nullptr),
     father(nullptr),numOfRightSons(0),numOfLeftSons(0),height(0),key(0), isVip(0),
     views(0), ComedyViews(0), FantasyViews(0), DramaViews(0), moviesWatched(0), ActionViews(0)
-    ,ComedyWatched(0), ActionWatched(0), FantasyWatched(0),DramaWatched(0){members = AVL_Tree<Node<group_node>>();}
-    void addLeftSon(group_node* son){
+    ,ComedyWatched(0), ActionWatched(0), FantasyWatched(0),DramaWatched(0){members = AVL_Tree<Node<nodeContainingTree>>();}
+    void addLeftSon(nodeContainingTree* son){
         this->leftSon = son;
-        group_node* currentFather = son->father;
+        nodeContainingTree* currentFather = son->father;
         while(currentFather != nullptr)
         {
             currentFather->numOfLeftSons++;
             currentFather = currentFather->father;
         }
     }
-    void addRightSon(group_node* son){
+    void addRightSon(nodeContainingTree* son){
         this->rightSon = son;
-        group_node* currentFather = son->father;
+        nodeContainingTree* currentFather = son->father;
         while(currentFather != nullptr)
         {
             currentFather->numOfRightSons++;
             currentFather = currentFather->father;
         }
     }
-    void swapNodes(group_node* node1){
+    void swapNodes(nodeContainingTree* node1){
         int temp;
         temp = this->content;
         this->content = node1->content;
@@ -689,9 +689,9 @@ public:
         }
         return leftHeight-rightHeight;
     }
-    ~group_node()=default;
-    group_node(group_node&)=default;
-    group_node& operator=(const group_node& other)= default;
+    ~nodeContainingTree()=default;
+    nodeContainingTree(nodeContainingTree&)=default;
+    nodeContainingTree& operator=(const nodeContainingTree& other)= default;
 };
 
 
@@ -702,7 +702,7 @@ public:
 
 
 
-void copyNodeContent(Node<group_node>* ptr1, const Node<group_node>* ptr2){
+void copyNodeContent(Node<nodeContainingTree>* ptr1, const Node<nodeContainingTree>* ptr2){
     ptr1->key = ptr2->key;
     ptr1->content = ptr2->content;
     ptr1->views = ptr2->views;
@@ -738,13 +738,13 @@ void copyNodeContent(Node<group_node>* ptr1, const Node<group_node>* ptr2){
 //streamingdtb.h
 class streaming_database {
 private:
-    AVL_Tree<Node<group_node>> movies;
-    AVL_Tree<Node<group_node>> users;
-    AVL_Tree<group_node> groups;
-    AVL_Tree<Node<group_node>> comedyMovies;
-    AVL_Tree<Node<group_node>> actionMovies;
-    AVL_Tree<Node<group_node>> dramaMovies;
-    AVL_Tree<Node<group_node>> fantasyMovies;
+    AVL_Tree<Node<nodeContainingTree>> movies;
+    AVL_Tree<Node<nodeContainingTree>> users;
+    AVL_Tree<nodeContainingTree> groups;
+    AVL_Tree<Node<nodeContainingTree>> comedyMovies;
+    AVL_Tree<Node<nodeContainingTree>> actionMovies;
+    AVL_Tree<Node<nodeContainingTree>> dramaMovies;
+    AVL_Tree<Node<nodeContainingTree>> fantasyMovies;
 public:
     // <DO-NOT-MODIFY> {
 
@@ -794,13 +794,13 @@ public:
 // streamingdtb.cpp
 streaming_database::streaming_database()
 {
-    movies = AVL_Tree<Node<group_node>>();
-    users = AVL_Tree<Node<group_node>>();
-    groups = AVL_Tree<group_node>();
-    comedyMovies = AVL_Tree<Node<group_node>>();
-    actionMovies = AVL_Tree<Node<group_node>>();
-    fantasyMovies = AVL_Tree<Node<group_node>>();
-    dramaMovies = AVL_Tree<Node<group_node>>();
+    movies = AVL_Tree<Node<nodeContainingTree>>();
+    users = AVL_Tree<Node<nodeContainingTree>>();
+    groups = AVL_Tree<nodeContainingTree>();
+    comedyMovies = AVL_Tree<Node<nodeContainingTree>>();
+    actionMovies = AVL_Tree<Node<nodeContainingTree>>();
+    fantasyMovies = AVL_Tree<Node<nodeContainingTree>>();
+    dramaMovies = AVL_Tree<Node<nodeContainingTree>>();
 }
 
 template<class T>
@@ -831,16 +831,16 @@ StatusType streaming_database::add_movie(int movieId, Genre genre, int views, bo
     if(movieId <= 0 || genre == Genre::NONE || views < 0){
         return StatusType::INVALID_INPUT;
     }
-    Node<group_node>* movie = new Node<group_node>(0,movieId, nullptr);
+    Node<nodeContainingTree>* movie = new Node<nodeContainingTree>(0,movieId, nullptr);
     if(!movie){
         return StatusType::ALLOCATION_ERROR;
     }
-    Node<group_node>* ptr = movies.searchAndAdd(movie);
+    Node<nodeContainingTree>* ptr = movies.searchAndAdd(movie);
     if(ptr->key == -1){
         delete ptr;
         return StatusType::FAILURE;
     }
-    Node<group_node>* genreMovie = new Node<group_node>(0,movieId, nullptr);
+    Node<nodeContainingTree>* genreMovie = new Node<nodeContainingTree>(0,movieId, nullptr);
     movie->changeVip(vipOnly);
     genreMovie->changeVip(vipOnly);
     movie->changeGenre(genre);
@@ -869,7 +869,7 @@ StatusType streaming_database::remove_movie(int movieId)
     if(movieId <=0){
         return StatusType::INVALID_INPUT;
     }
-    Node<group_node>* curMovie = movies.search(movieId);
+    Node<nodeContainingTree>* curMovie = movies.search(movieId);
     if(curMovie->key == -1){
         delete curMovie;
         return StatusType::FAILURE;
@@ -897,11 +897,11 @@ StatusType streaming_database::add_user(int userId, bool isVip)
     if(userId <= 0){
         return StatusType::INVALID_INPUT;
     }
-    Node<group_node>* user = new Node<group_node>(0,userId, nullptr);
+    Node<nodeContainingTree>* user = new Node<nodeContainingTree>(0,userId, nullptr);
     if(!user){
         return StatusType::ALLOCATION_ERROR;
     }
-    Node<group_node>* ptr = users.searchAndAdd(user);
+    Node<nodeContainingTree>* ptr = users.searchAndAdd(user);
     if(ptr->key == -1){
         delete ptr;
         return StatusType::FAILURE;
@@ -924,11 +924,11 @@ StatusType streaming_database::add_group(int groupId)
     if(groupId <=0){
         return StatusType::INVALID_INPUT;
     }
-    group_node* group = new group_node(0,groupId, nullptr);
+    nodeContainingTree* group = new nodeContainingTree(0,groupId, nullptr);
     if(!group){
         return StatusType::ALLOCATION_ERROR;
     }
-    group_node* ptr = groups.searchAndAdd(group);
+    nodeContainingTree* ptr = groups.searchAndAdd(group);
     if(ptr->key == -1){
         delete ptr;
         return StatusType::FAILURE;
@@ -937,7 +937,7 @@ StatusType streaming_database::add_group(int groupId)
     group->isVip = false;
     return StatusType::SUCCESS;
 }
-void incrementAndDelete(Node<group_node>* ptr, const group_node* group){
+void incrementAndDelete(Node<nodeContainingTree>* ptr, const nodeContainingTree* group){
     if(!ptr){
         return;
     }
@@ -959,12 +959,12 @@ StatusType streaming_database::remove_group(int groupId)
     if(groupId <=0){
         return StatusType::INVALID_INPUT;
     }
-    group_node* groupToDelete = groups.search(groupId);
+    nodeContainingTree* groupToDelete = groups.search(groupId);
     if(groupToDelete->key == -1){
         delete groupToDelete;
         return StatusType::FAILURE;
     }
-    Node<group_node>* ptr = groupToDelete->members.getRoot();
+    Node<nodeContainingTree>* ptr = groupToDelete->members.getRoot();
     incrementAndDelete(ptr, groupToDelete);
     return groups.searchAndDelete(groupId);
 }
@@ -974,7 +974,7 @@ StatusType streaming_database::add_user_to_group(int userId, int groupId)
     if(userId <=0 || groupId <= 0){
         return StatusType::INVALID_INPUT;
     }
-    Node<group_node>* user = users.search(userId); // O(log(n))
+    Node<nodeContainingTree>* user = users.search(userId); // O(log(n))
     if(user->key == -1){
         delete user;
         return StatusType::FAILURE;
@@ -982,7 +982,7 @@ StatusType streaming_database::add_user_to_group(int userId, int groupId)
     if(user->curGroup != nullptr){
         return StatusType::FAILURE;
     }
-    group_node* group = groups.search(groupId); // O(log(m))
+    nodeContainingTree* group = groups.search(groupId); // O(log(m))
     if (group->key == -1){
         delete group;
         return StatusType::FAILURE;
@@ -991,7 +991,7 @@ StatusType streaming_database::add_user_to_group(int userId, int groupId)
     if(!group->isVip && user->isVip){
         group->isVip = true;
     }
-    Node<group_node>* groupUser = new Node<group_node>(0,userId, nullptr);
+    Node<nodeContainingTree>* groupUser = new Node<nodeContainingTree>(0,userId, nullptr);
     if(!groupUser){
         return StatusType::ALLOCATION_ERROR;
     }
@@ -1002,7 +1002,7 @@ StatusType streaming_database::add_user_to_group(int userId, int groupId)
     user->GroupActionViews = group->ActionWatched;
     copyNodeContent(groupUser,user);
     groupUser->groupUser = user;
-    Node<group_node>* ptr = group->members.searchAndAdd(groupUser);
+    Node<nodeContainingTree>* ptr = group->members.searchAndAdd(groupUser);
     if(ptr->key == -1){
         delete ptr;
         delete groupUser;
@@ -1016,12 +1016,12 @@ StatusType streaming_database::user_watch(int userId, int movieId)
     if(userId <= 0 || movieId <= 0){
         return StatusType::INVALID_INPUT;
     }
-    Node<group_node>* user = users.search(userId); // O(log(n))
+    Node<nodeContainingTree>* user = users.search(userId); // O(log(n))
     if(user->key == -1){
         delete user;
         return StatusType::FAILURE;
     }
-    Node<group_node>* movie = movies.search(movieId); // O(log(k))
+    Node<nodeContainingTree>* movie = movies.search(movieId); // O(log(k))
     if(movie->key == -1){
         delete movie;
         return StatusType::FAILURE;
@@ -1055,12 +1055,12 @@ StatusType streaming_database::group_watch(int groupId,int movieId)
     if(groupId <= 0 || movieId <= 0){
         return StatusType::INVALID_INPUT;
     }
-    Node<group_node>* movie = movies.search(movieId); // O(log(k))
+    Node<nodeContainingTree>* movie = movies.search(movieId); // O(log(k))
     if(movie->key == -1){
         delete movie;
         return StatusType::FAILURE;
     }
-    group_node* group = groups.search(groupId); // O(log(m))
+    nodeContainingTree* group = groups.search(groupId); // O(log(m))
     if(group->key == -1){
         delete group;
         return StatusType::FAILURE;
@@ -1104,20 +1104,22 @@ output_t<int> streaming_database::get_all_movies_count(Genre genre)
     }
     return output_t<int>(StatusType::ALLOCATION_ERROR);
 }
-void iterate(int i, int *const output, Node<group_node>* ptr){ // not finished
+void iterate(int* i, int *const output, Node<nodeContainingTree>* ptr){ // not finished
     if(!ptr){
         return;
     }
-    iterate(i+1, output, ptr->leftSon);
-    output[i] = ptr->content;
-    iterate(i+1, output, ptr->rightSon);
+    iterate(i, output, ptr->rightSon);
+    output[i[0]] = ptr->content;
+    i[0]++;
+    iterate(i, output, ptr->leftSon);
 }
 StatusType streaming_database::get_all_movies(Genre genre, int *const output) // not finished
 {
     if(movies.getNumOfNodes() == 0){
         return StatusType::FAILURE;
     }
-    int i = 0;
+    int i[1];
+    i[0] = 0;
     switch (genre) {
         case Genre::COMEDY:
             if(comedyMovies.getNumOfNodes() == 0){
@@ -1155,7 +1157,7 @@ output_t<int> streaming_database::get_num_views(int userId, Genre genre)
     if(userId <= 0 ){
         return output_t<int>{StatusType::INVALID_INPUT};
     }
-    Node<group_node>* user = users.search(userId); // O(log(n))
+    Node<nodeContainingTree>* user = users.search(userId); // O(log(n))
     if(user->key == -1){
         delete user;
         return StatusType::FAILURE;
@@ -1195,12 +1197,12 @@ StatusType streaming_database::rate_movie(int userId, int movieId, int rating)
     if(userId <= 0 || movieId <= 0 || rating > 100 || rating < 0){
         return StatusType::INVALID_INPUT;
     }
-    Node<group_node>* user = users.search(userId); // O(log(n))
+    Node<nodeContainingTree>* user = users.search(userId); // O(log(n))
     if(user->key == -1){
         delete user;
         return StatusType::FAILURE;
     }
-    Node<group_node>* movie = movies.search(movieId); // O(log(k))
+    Node<nodeContainingTree>* movie = movies.search(movieId); // O(log(k))
     if(movie->key == -1){
         delete movie;
         return StatusType::FAILURE;
@@ -1219,27 +1221,68 @@ output_t<int> streaming_database::get_group_recommendation(int groupId) // not f
     return (i++==0) ? 11 : 2;
 }
 
+void print(output_t<int> output){
+    switch (output.status()) {
+        case StatusType::FAILURE:
+            std::cout << std::endl << "FAILURE";
+            return;
+        case StatusType::SUCCESS:
+            std::cout << std::endl << "SUCCESS  value = " <<output.ans();
+            return;
+        case StatusType::ALLOCATION_ERROR:
+            std::cout << std::endl << "ALLOCATION_ERROR";
+            return;
+        case StatusType::INVALID_INPUT:
+            std::cout << std::endl << "INVALID_INPUT";
+            return;
+    }
+}
+
 int main()
 {
-    AVL_Tree<Node<group_node>> avlTree, avlTree2;
+    AVL_Tree<Node<nodeContainingTree>> avlTree, avlTree2;
     int arr[12]={10,5,12,3,9,11,13,14,2,4, 100, 200};
     int arr2[12]={2,3,4,5,9,10,11,12,13,14, 2000, 17};
     int arr3[12]={14,10,12,10,10,9,5,4,3,2, 87, 900};
     for (int i = 0; i < 12; ++i) {
-        avlTree.searchAndAdd(new Node<group_node>(0,arr[i], nullptr));
+        avlTree.searchAndAdd(new Node<nodeContainingTree>(0,arr[i], nullptr));
         avlTree.printLevelOrder();
         avlTree2.printLevelOrder();
     }
     avlTree.printTree(avlTree.getRoot());
     streaming_database *obj = new streaming_database();
-    obj->add_user(100,1);
-    obj->add_group(200);
-    obj->add_user_to_group(100,200);
+    obj->add_user(1,0);
+    obj->add_user(2,1);
+    obj->add_user(3,1);
+    obj->add_group(1);
+    obj->add_group(2);
+    obj->add_user_to_group(3,2);
+    obj->add_user_to_group(1,1);
     obj->add_movie(1,Genre::COMEDY,10,1);
     obj->add_movie(2, Genre::DRAMA,10,1);
     obj->add_movie(3,Genre::FANTASY,10,1);
     obj->add_movie(4,Genre::ACTION,10,1);
     obj->add_movie(5,Genre::COMEDY,10,1);
+    obj->rate_movie(1,1,50);
+    obj->rate_movie(2,1,100);
+    int array[5]= {0};
+    obj->get_all_movies(Genre::NONE,array);
+    std::cout << "\n";
+    for (int i = 0; i < 5; ++i) {
+        std::cout << array[i] << ", ";
+    }
+    std::cout << "\n";
+    obj->user_watch(2,1);
+    obj->group_watch(2,1);
+    print(obj->get_num_views(2,Genre::COMEDY));
+    obj->user_watch(2,1);
+    obj->group_watch(1,1);
+    obj->add_user_to_group(2,1);
+    obj->remove_group(1);
+    print(obj->get_num_views(2,Genre::COMEDY));
+    obj->add_user_to_group(2,2);
+    print(obj->get_num_views(2,Genre::COMEDY));
+
     int* output = new int[5];
 
     obj->remove_movie(1);
