@@ -65,7 +65,8 @@ public:
     int GroupFantasyViews;
     int GroupDramaViews;
     int GroupActionViews;
-    int rating;
+    double rating;
+    int usersRated;
     Node* leftSon;
     Node* rightSon;
     Node* father; //if needed
@@ -78,20 +79,28 @@ public:
     void swapNodes(Node<T>* node1);
     int getBalanceFactor() const;
     int updateHeight();
+
+
     Node():content(0),leftSon(nullptr),rightSon(nullptr),
     father(nullptr),numOfRightSons(0),numOfLeftSons(0),height(0),key(0),
     genre(Genre::NONE), isVip(0), views(0), ComedyViews(0), FantasyViews(0), DramaViews(0), ActionViews(0),
     curGroup(nullptr), groupViews(0), groupUser(nullptr), GroupActionViews(0), GroupComedyViews(0),
-    GroupDramaViews(0), GroupFantasyViews(0), rating(0){};
+    GroupDramaViews(0), GroupFantasyViews(0), rating(0), usersRated(0){};
+
+
     Node(int key, int content,Node* father):key(key),content(content),genre(Genre::NONE),isVip(0),views(0),
     leftSon(nullptr),rightSon(nullptr),numOfRightSons(0),numOfLeftSons(0),father(father),height(0), ComedyViews(0)
     , FantasyViews(0), DramaViews(0), ActionViews(0), curGroup(nullptr), groupViews(0), groupUser(nullptr)
-    , GroupActionViews(0), GroupComedyViews(0), GroupDramaViews(0), GroupFantasyViews(0), rating(0){}
+    , GroupActionViews(0), GroupComedyViews(0), GroupDramaViews(0), GroupFantasyViews(0), rating(0), usersRated(0){}
+
+
     Node(int key):content(0),leftSon(nullptr),rightSon(nullptr),
     father(nullptr),numOfRightSons(0),numOfLeftSons(0),height(0),key(key),
     genre(Genre::NONE), isVip(0), views(0), ComedyViews(0),FantasyViews(0), DramaViews(0), ActionViews(0)
     ,curGroup(nullptr), groupViews(0), groupUser(nullptr)
-    , GroupActionViews(0), GroupComedyViews(0), GroupDramaViews(0), GroupFantasyViews(0), rating(0){};
+    , GroupActionViews(0), GroupComedyViews(0), GroupDramaViews(0), GroupFantasyViews(0), rating(0), usersRated(0){};
+
+
     ~Node()=default;
     Node(Node&)=default;
     Node& operator=(const Node& other)= default;
@@ -101,17 +110,26 @@ public:
     void changeContent(int newContent){content = newContent;}
 };
 
+template <class T>
+void copyNodeContent(Node<T>* ptr1, const Node<T>* ptr2){
+    ptr1->key = ptr2->key;
+    ptr1->content = ptr2->content;
+    ptr1->views = ptr2->views;
+    ptr1->groupViews = ptr2->groupViews;
+    ptr1->GroupFantasyViews = ptr2->GroupFantasyViews;
+    ptr1->GroupDramaViews = ptr2->GroupDramaViews;
+    ptr1->GroupComedyViews = ptr2->GroupComedyViews;
+    ptr1->GroupActionViews = ptr2->GroupActionViews;
+    ptr1->isVip = ptr2->isVip;
+    ptr1->curGroup =ptr2->curGroup;
+    ptr1->genre = ptr2->genre;
+    ptr1->ActionViews = ptr2->ActionViews;
+    ptr1->DramaViews = ptr2->DramaViews;
+    ptr1->FantasyViews = ptr2->FantasyViews;
+    ptr1->ComedyViews = ptr2->ComedyViews;
+    ptr1->rating = ptr2->rating;
+}
 
-
-
-
-
-
-
-
-
-
-//node.cpp
 template<class T>
 void Node<T>::addLeftSon(Node<T>* son)
 {
@@ -192,13 +210,21 @@ int Node<T>::getBalanceFactor() const
 }
 
 template<class T>
-void Node<T>::swapNodes(Node *node1)
+void Node<T>::swapNodes(Node<T>* node1)
 {
-    int temp;
-    temp = this->content;
-    this->content = node1->content;
-    node1->content = temp;
+    Node<T>* temp= new Node();
+    copyNodeContent(temp,node1);
+    copyNodeContent(node1,this);
+    copyNodeContent(this,temp);
+
 }
+//node.h end
+
+
+
+
+
+
 
 
 
@@ -220,8 +246,10 @@ public:
     AVL_Tree(AVL_Tree& avlTree)=default;
     T* getRoot(){return this->root;};
     int getNumOfNodes() const{return this->numOfNodes;};
-    T* searchAndAdd (T* toInsert);
+    StatusType searchAndAddRating (T* toInsert);
     T* search(int content);
+    StatusType searchAndDeleteRating(double rating, int views, int content);
+    StatusType searchAndAdd(T* toInsert);
     StatusType searchAndDelete(int content);
     void leftRoll(T* node);
     void rightRoll(T* node);
@@ -236,15 +264,8 @@ public:
     }
 };
 
-
-
-
-
-
-
-//avl_tree.cpp
 template<class T>
-T* AVL_Tree<T>::searchAndAdd(T* toInsert)
+StatusType AVL_Tree<T>::searchAndAdd(T* toInsert)
 {
     // Search
 
@@ -266,7 +287,7 @@ T* AVL_Tree<T>::searchAndAdd(T* toInsert)
             continue;
         }
         if (currentNodePtr->content == toInsert->content)
-            return new T(-1);
+            return StatusType::FAILURE;
         currentNodePtr = currentNodePtr->leftSon; //Go to right son
         if (currentNodePtr == nullptr)
         {
@@ -282,7 +303,7 @@ T* AVL_Tree<T>::searchAndAdd(T* toInsert)
         this->root=toInsert;
         toInsert->updateHeight();
         this->numOfNodes++;
-        return toInsert;
+        return StatusType::SUCCESS;
     }
 
     int oldHeight = currentFatherNodePtr->height;
@@ -322,13 +343,12 @@ T* AVL_Tree<T>::searchAndAdd(T* toInsert)
         oldHeight = currentFatherNodePtr->height;
     }
     this->numOfNodes++;
-    return toInsert;
+    return StatusType::SUCCESS;
 }
 template<class T>
 StatusType AVL_Tree<T>::searchAndDelete(int content)
 {
 // Search
-
     T* currentNodePtr = this->root;
     T* currentFatherNodePtr = nullptr;
     while(currentNodePtr != nullptr)
@@ -423,6 +443,343 @@ StatusType AVL_Tree<T>::searchAndDelete(int content)
             continue;
         }
 
+        currentNodePtr = currentNodePtr->leftSon; //Go to right son
+        if (currentNodePtr == nullptr)
+        {
+            return StatusType::FAILURE;
+        }
+    }
+
+    // fixing the tree with rolls
+
+    int oldHeight = currentFatherNodePtr->height;
+    while(oldHeight != currentFatherNodePtr->updateHeight())
+    {
+        int currentBalanceFactor = currentFatherNodePtr->getBalanceFactor();
+        if(abs(currentBalanceFactor) == 2)
+        {
+            if(currentBalanceFactor == -2) //balance -2 -> RR/RL
+            {
+                if(currentFatherNodePtr->rightSon->getBalanceFactor() == 1) //RL
+                {
+                    rightRoll(currentFatherNodePtr->rightSon);
+                    leftRoll(currentFatherNodePtr);
+                    continue;
+                }
+                //RR
+                leftRoll(currentFatherNodePtr);
+                continue;
+
+            }
+            //balance 2 -> LR/LL
+            if(currentFatherNodePtr->leftSon->getBalanceFactor() == -1) //LR
+            {
+                leftRoll(currentFatherNodePtr->leftSon);
+                rightRoll(currentFatherNodePtr);
+                continue;
+            }
+            //LL
+            rightRoll(currentFatherNodePtr);
+            continue;
+        }
+
+        currentFatherNodePtr = currentFatherNodePtr->father;
+        if (currentFatherNodePtr == nullptr)
+            break;
+        oldHeight = currentFatherNodePtr->height;
+    }
+    this->numOfNodes--;
+    return StatusType::SUCCESS;
+
+}
+template<class T>
+StatusType AVL_Tree<T>::searchAndAddRating(T* toInsert)
+{
+    // Search
+
+    T* currentNodePtr = this->root;
+    T* currentFatherNodePtr = nullptr;
+    while(currentNodePtr != nullptr)
+    {
+        currentFatherNodePtr = currentNodePtr;
+
+        // if =
+        if (currentNodePtr->rating == toInsert->rating)
+        {
+
+            // if =
+            if (currentNodePtr->views == toInsert->views)
+            {
+
+                // if to add content == current content
+                if (currentNodePtr->content == toInsert->content)
+                {
+                return StatusType::FAILURE;
+                }
+
+
+                // if current content < to add content
+                if (currentNodePtr->content < toInsert->content)
+                {
+                    currentNodePtr = currentNodePtr->rightSon; //Go to right son
+                    if (currentNodePtr == nullptr)
+                    {
+                        toInsert->father = currentFatherNodePtr;
+                        currentFatherNodePtr->addRightSon(toInsert);
+                        break;
+                    }
+                    continue;
+                }
+
+
+                // if current content > to add content
+                currentNodePtr = currentNodePtr->leftSon; //Go to right son
+                if (currentNodePtr == nullptr)
+                {
+                    toInsert->father = currentFatherNodePtr;
+                    currentFatherNodePtr->addLeftSon(toInsert);
+                    break;
+                }
+                continue;
+            }
+            // if views < to add views
+            if (currentNodePtr->views < toInsert->views)
+            {
+                currentNodePtr = currentNodePtr->rightSon; //Go to right son
+                if (currentNodePtr == nullptr)
+                {
+                    toInsert->father = currentFatherNodePtr;
+                    currentFatherNodePtr->addRightSon(toInsert);
+                    break;
+                }
+                continue;
+            }
+            // if current views > to add views
+            currentNodePtr = currentNodePtr->leftSon; //Go to right son
+            if (currentNodePtr == nullptr)
+            {
+                toInsert->father = currentFatherNodePtr;
+                currentFatherNodePtr->addLeftSon(toInsert);
+                break;
+            }
+            continue;
+        }
+
+
+        // if <
+        if (currentNodePtr->rating < toInsert->rating)
+        {
+            currentNodePtr = currentNodePtr->rightSon; //Go to right son
+            if (currentNodePtr == nullptr)
+            {
+                toInsert->father = currentFatherNodePtr;
+                currentFatherNodePtr->addRightSon(toInsert);
+                break;
+            }
+            continue;
+        }
+
+        // if >
+        currentNodePtr = currentNodePtr->leftSon; //Go to right son
+        if (currentNodePtr == nullptr)
+        {
+            toInsert->father = currentFatherNodePtr;
+            currentFatherNodePtr->addLeftSon(toInsert);
+            break;
+        }
+    }
+
+
+
+    // Add
+    if(currentFatherNodePtr == nullptr) //new root
+    {
+        toInsert->father = nullptr;
+        this->root=toInsert;
+        toInsert->updateHeight();
+        this->numOfNodes++;
+        return StatusType::SUCCESS;
+    }
+
+
+    int oldHeight = currentFatherNodePtr->height;
+    while(oldHeight != currentFatherNodePtr->updateHeight())
+    {
+        int currentBalanceFactor = currentFatherNodePtr->getBalanceFactor();
+        if(abs(currentBalanceFactor) == 2)
+        {
+            if(currentBalanceFactor == -2) //balance -2 -> RR/RL
+            {
+                if(currentFatherNodePtr->rightSon->getBalanceFactor() == 1) //RL
+                {
+                    rightRoll(currentFatherNodePtr->rightSon);
+                    leftRoll(currentFatherNodePtr);
+                    break;
+                }
+                //RR
+                leftRoll(currentFatherNodePtr);
+                break;
+
+            }
+            //balance 2 -> LR/LL
+            if(currentFatherNodePtr->leftSon->getBalanceFactor() == -1) //LR
+            {
+                leftRoll(currentFatherNodePtr->leftSon);
+                rightRoll(currentFatherNodePtr);
+                break;
+            }
+            //LL
+            rightRoll(currentFatherNodePtr);
+            break;
+        }
+
+        currentFatherNodePtr = currentFatherNodePtr->father;
+        if (currentFatherNodePtr == nullptr)
+            break;
+        oldHeight = currentFatherNodePtr->height;
+    }
+    this->numOfNodes++;
+    return StatusType::SUCCESS;
+}
+
+
+
+template<class T>
+StatusType AVL_Tree<T>::searchAndDeleteRating(double rating, int views, int content)
+{
+// Search
+
+    T* currentNodePtr = this->root;
+    T* currentFatherNodePtr = nullptr;
+    while(currentNodePtr != nullptr)
+    {
+        if (currentNodePtr->rating == rating)
+        {
+            if (currentNodePtr->views == views)
+            {
+                if (currentNodePtr->content == content)
+                {
+                    //found the node to delete
+                    //leaf
+                    currentFatherNodePtr = currentNodePtr->father;
+                    if(currentNodePtr->rightSon == nullptr && currentNodePtr->leftSon == nullptr)
+                    {
+                        //deleting root
+                        if (currentNodePtr->father == nullptr)
+                        {
+                            root = nullptr;
+                            numOfNodes--;
+                            return StatusType::SUCCESS;
+                        }
+
+                        if (currentNodePtr->father->rightSon == currentNodePtr)
+                        {
+                            currentNodePtr->father->rightSon = nullptr;
+                            break;
+                        }
+                        currentNodePtr->father->leftSon = nullptr;
+                        break;
+                    }
+                    // has just one son
+                    if(currentNodePtr->rightSon != nullptr && currentNodePtr->leftSon == nullptr)
+                    {
+                        //deleting root
+                        if (currentNodePtr->father == nullptr)
+                        {
+                            root = currentNodePtr->rightSon;
+                            currentNodePtr->rightSon->father = nullptr;
+                            numOfNodes--;
+                            return StatusType::SUCCESS;
+                        }
+
+                        if (currentNodePtr->father->rightSon == currentNodePtr)
+                        {
+                            currentNodePtr->father->rightSon = currentNodePtr->rightSon;
+                            currentNodePtr->rightSon->father = currentNodePtr->father;
+                            break;
+                        }
+                        currentNodePtr->father->leftSon = currentNodePtr->rightSon;
+                        currentNodePtr->rightSon->father = currentNodePtr->father;
+                        break;
+                    }
+                    if(currentNodePtr->leftSon != nullptr && currentNodePtr->rightSon == nullptr)
+                    {
+                        //deleting root
+                        if (currentNodePtr->father == nullptr)
+                        {
+                            root = currentNodePtr->leftSon;
+                            currentNodePtr->leftSon->father = nullptr;
+                            numOfNodes--;
+                            return StatusType::SUCCESS;
+                        }
+
+                        if (currentNodePtr->father->rightSon == currentNodePtr)
+                        {
+                            currentNodePtr->father->rightSon = currentNodePtr->leftSon;
+                        }
+                        currentNodePtr->father->leftSon = currentNodePtr->leftSon;
+                        break;
+                    }
+                    // has two sons
+                    T* nodeToSwitch;
+                    nodeToSwitch = currentNodePtr->rightSon;
+                    while(nodeToSwitch->leftSon != nullptr)
+                    {
+                        nodeToSwitch = nodeToSwitch->leftSon;
+                    }
+                    if(nodeToSwitch->father->leftSon == nodeToSwitch)
+                    {
+                        nodeToSwitch->father->leftSon = nullptr;
+                    }
+                    else{nodeToSwitch->father->rightSon = nullptr; }
+                    currentFatherNodePtr = nodeToSwitch->father;
+                    nodeToSwitch->father = nullptr;
+                    nodeToSwitch->swapNodes(currentNodePtr);
+                    break;
+                }
+                if (currentNodePtr->content < content)
+                {
+                    currentNodePtr = currentNodePtr->rightSon; //Go to right son
+                    if (currentNodePtr == nullptr)
+                    {
+                        return StatusType::FAILURE;
+                    }
+                    continue;
+                }
+                // if    > to insert content
+                currentNodePtr = currentNodePtr->leftSon; //Go to right son
+                if (currentNodePtr == nullptr)
+                {
+                    return StatusType::FAILURE;
+                }
+            }
+            if (currentNodePtr->views < views)
+            {
+                currentNodePtr = currentNodePtr->rightSon; //Go to right son
+                if (currentNodePtr == nullptr)
+                {
+                    return StatusType::FAILURE;
+                }
+                continue;
+            }
+            // if    > to insert views
+            currentNodePtr = currentNodePtr->leftSon; //Go to right son
+            if (currentNodePtr == nullptr)
+            {
+                return StatusType::FAILURE;
+            }
+
+        }
+        if (currentNodePtr->rating < rating)
+        {
+            currentNodePtr = currentNodePtr->rightSon; //Go to right son
+            if (currentNodePtr == nullptr)
+            {
+                return StatusType::FAILURE;
+            }
+            continue;
+        }
+            // if    > to insert rating
         currentNodePtr = currentNodePtr->leftSon; //Go to right son
         if (currentNodePtr == nullptr)
         {
@@ -579,13 +936,30 @@ void AVL_Tree<T>::printLevelOrder() {
     }
     std::cout << "---------------------------------------------------------------------" << std::endl;
 }
-class nodeContainingTree
+// avl_tree end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//group_node.h
+class group_node
 {
 public:
-    nodeContainingTree* leftSon;
-    nodeContainingTree* rightSon;
-    nodeContainingTree* father;
-    AVL_Tree<Node<nodeContainingTree>> members;
+    group_node* leftSon;
+    group_node* rightSon;
+    group_node* father;
+    AVL_Tree<Node<group_node>> members;
     int key;
     int content;
     bool isVip;
@@ -602,38 +976,43 @@ public:
     int FantasyWatched;
     int DramaWatched;
     int ActionWatched;
+    double rating;
 
-    nodeContainingTree():content(0),leftSon(nullptr),rightSon(nullptr),
+    group_node():content(0),leftSon(nullptr),rightSon(nullptr),
     father(nullptr),numOfRightSons(0),numOfLeftSons(0),height(0),key(0), isVip(0),
     views(0), ComedyViews(0), FantasyViews(0), DramaViews(0), moviesWatched(0) , ActionViews(0)
-    ,ComedyWatched(0), ActionWatched(0), FantasyWatched(0),DramaWatched(0){members = AVL_Tree<Node<nodeContainingTree>>();}
-    nodeContainingTree(int key1, int content1,nodeContainingTree* father1):content(content1),leftSon(nullptr),rightSon(nullptr),
+    ,ComedyWatched(0), ActionWatched(0), FantasyWatched(0),DramaWatched(0), rating(0)
+    {members = AVL_Tree<Node<group_node>>();}
+    group_node(int key1, int content1,group_node* father1):content(content1),
+    leftSon(nullptr),rightSon(nullptr),
     father(father1),numOfRightSons(0),numOfLeftSons(0),height(0),key(key1), isVip(0),
     views(0), ComedyViews(0), FantasyViews(0), DramaViews(0), moviesWatched(0), ActionViews(0)
-    ,ComedyWatched(0), ActionWatched(0), FantasyWatched(0),DramaWatched(0){members = AVL_Tree<Node<nodeContainingTree>>();}
-    nodeContainingTree(int key1):content(0),leftSon(nullptr),rightSon(nullptr),
+    ,ComedyWatched(0), ActionWatched(0), FantasyWatched(0),DramaWatched(0), rating(0)
+    {members = AVL_Tree<Node<group_node>>();}
+    group_node(int key1):content(0),leftSon(nullptr),rightSon(nullptr),
     father(nullptr),numOfRightSons(0),numOfLeftSons(0),height(0),key(0), isVip(0),
     views(0), ComedyViews(0), FantasyViews(0), DramaViews(0), moviesWatched(0), ActionViews(0)
-    ,ComedyWatched(0), ActionWatched(0), FantasyWatched(0),DramaWatched(0){members = AVL_Tree<Node<nodeContainingTree>>();}
-    void addLeftSon(nodeContainingTree* son){
+    ,ComedyWatched(0), ActionWatched(0), FantasyWatched(0),DramaWatched(0), rating(0)
+    {members = AVL_Tree<Node<group_node>>();}
+    void addLeftSon(group_node* son){
         this->leftSon = son;
-        nodeContainingTree* currentFather = son->father;
+        group_node* currentFather = son->father;
         while(currentFather != nullptr)
         {
             currentFather->numOfLeftSons++;
             currentFather = currentFather->father;
         }
     }
-    void addRightSon(nodeContainingTree* son){
+    void addRightSon(group_node* son){
         this->rightSon = son;
-        nodeContainingTree* currentFather = son->father;
+        group_node* currentFather = son->father;
         while(currentFather != nullptr)
         {
             currentFather->numOfRightSons++;
             currentFather = currentFather->father;
         }
     }
-    void swapNodes(nodeContainingTree* node1){
+    void swapNodes(group_node* node1){
         int temp;
         temp = this->content;
         this->content = node1->content;
@@ -689,11 +1068,12 @@ public:
         }
         return leftHeight-rightHeight;
     }
-    ~nodeContainingTree()=default;
-    nodeContainingTree(nodeContainingTree&)=default;
-    nodeContainingTree& operator=(const nodeContainingTree& other)= default;
+    ~group_node()=default;
+    group_node(group_node&)=default;
+    group_node& operator=(const group_node& other)= default;
 };
 
+// group_node.h end
 
 
 
@@ -701,24 +1081,6 @@ public:
 
 
 
-
-void copyNodeContent(Node<nodeContainingTree>* ptr1, const Node<nodeContainingTree>* ptr2){
-    ptr1->key = ptr2->key;
-    ptr1->content = ptr2->content;
-    ptr1->views = ptr2->views;
-    ptr1->groupViews = ptr2->groupViews;
-    ptr1->GroupFantasyViews = ptr2->GroupFantasyViews;
-    ptr1->GroupDramaViews = ptr2->GroupDramaViews;
-    ptr1->GroupComedyViews = ptr2->GroupComedyViews;
-    ptr1->GroupActionViews = ptr2->GroupActionViews;
-    ptr1->isVip = ptr2->isVip;
-    ptr1->curGroup =ptr2->curGroup;
-    ptr1->genre = ptr2->genre;
-    ptr1->ActionViews = ptr2->ActionViews;
-    ptr1->DramaViews = ptr2->DramaViews;
-    ptr1->FantasyViews = ptr2->FantasyViews;
-    ptr1->ComedyViews = ptr2->ComedyViews;
-}
 
 
 
@@ -738,13 +1100,16 @@ void copyNodeContent(Node<nodeContainingTree>* ptr1, const Node<nodeContainingTr
 //streamingdtb.h
 class streaming_database {
 private:
-    AVL_Tree<Node<nodeContainingTree>> movies;
-    AVL_Tree<Node<nodeContainingTree>> users;
-    AVL_Tree<nodeContainingTree> groups;
-    AVL_Tree<Node<nodeContainingTree>> comedyMovies;
-    AVL_Tree<Node<nodeContainingTree>> actionMovies;
-    AVL_Tree<Node<nodeContainingTree>> dramaMovies;
-    AVL_Tree<Node<nodeContainingTree>> fantasyMovies;
+    AVL_Tree<Node<group_node>> users;
+    AVL_Tree<group_node> groups;
+    AVL_Tree<Node<group_node>> movies;
+    AVL_Tree<Node<group_node>> comedyMovies;
+    AVL_Tree<Node<group_node>> actionMovies;
+    AVL_Tree<Node<group_node>> dramaMovies;
+    AVL_Tree<Node<group_node>> fantasyMovies;
+    AVL_Tree<Node<group_node>> moviesRating;
+
+
 public:
     // <DO-NOT-MODIFY> {
 
@@ -783,6 +1148,20 @@ public:
     // } </DO-NOT-MODIFY>
 };
 
+//streamingdtb.h end
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -794,13 +1173,14 @@ public:
 // streamingdtb.cpp
 streaming_database::streaming_database()
 {
-    movies = AVL_Tree<Node<nodeContainingTree>>();
-    users = AVL_Tree<Node<nodeContainingTree>>();
-    groups = AVL_Tree<nodeContainingTree>();
-    comedyMovies = AVL_Tree<Node<nodeContainingTree>>();
-    actionMovies = AVL_Tree<Node<nodeContainingTree>>();
-    fantasyMovies = AVL_Tree<Node<nodeContainingTree>>();
-    dramaMovies = AVL_Tree<Node<nodeContainingTree>>();
+    movies = AVL_Tree<Node<group_node>>();
+    users = AVL_Tree<Node<group_node>>();
+    groups = AVL_Tree<group_node>();
+    comedyMovies = AVL_Tree<Node<group_node>>();
+    actionMovies = AVL_Tree<Node<group_node>>();
+    fantasyMovies = AVL_Tree<Node<group_node>>();
+    dramaMovies = AVL_Tree<Node<group_node>>();
+    moviesRating = AVL_Tree<Node<group_node>>();
 }
 
 template<class T>
@@ -816,13 +1196,14 @@ void deleteTree(T* root){
 
 streaming_database::~streaming_database()
 {
-    deleteTree(movies.getRoot());
     deleteTree(users.getRoot());
     deleteTree(groups.getRoot());
+    deleteTree(movies.getRoot());
     deleteTree(comedyMovies.getRoot());
     deleteTree(actionMovies.getRoot());
     deleteTree(fantasyMovies.getRoot());
     deleteTree(dramaMovies.getRoot());
+    deleteTree(moviesRating.getRoot());
 }
 
 
@@ -831,34 +1212,34 @@ StatusType streaming_database::add_movie(int movieId, Genre genre, int views, bo
     if(movieId <= 0 || genre == Genre::NONE || views < 0){
         return StatusType::INVALID_INPUT;
     }
-    Node<nodeContainingTree>* movie = new Node<nodeContainingTree>(0,movieId, nullptr);
+    Node<group_node>* movie = new Node<group_node>(0,movieId, nullptr);
     if(!movie){
         return StatusType::ALLOCATION_ERROR;
     }
-    Node<nodeContainingTree>* ptr = movies.searchAndAdd(movie);
-    if(ptr->key == -1){
-        delete ptr;
-        return StatusType::FAILURE;
+    StatusType status = movies.searchAndAdd(movie);
+    if(status != StatusType::SUCCESS){
+        return status;
     }
-    Node<nodeContainingTree>* genreMovie = new Node<nodeContainingTree>(0,movieId, nullptr);
+    Node<group_node>* genreMovie = new Node<group_node>(0,movieId, nullptr);
+    Node<group_node>* rattingMovie = new Node<group_node>(0,movieId, nullptr);
     movie->changeVip(vipOnly);
-    genreMovie->changeVip(vipOnly);
     movie->changeGenre(genre);
-    genreMovie->changeGenre(genre);
     movie->changeViews(views);
-    genreMovie->changeViews(views);
+    copyNodeContent(genreMovie, movie);
+    copyNodeContent(rattingMovie, movie);
+    moviesRating.searchAndAddRating(rattingMovie);
     switch (genre) {
         case Genre::COMEDY:
-            comedyMovies.searchAndAdd(genreMovie);
+            comedyMovies.searchAndAddRating(genreMovie);
             return StatusType::SUCCESS;
         case Genre::ACTION:
-            actionMovies.searchAndAdd(genreMovie);
+            actionMovies.searchAndAddRating(genreMovie);
             return StatusType::SUCCESS;
         case Genre::FANTASY:
-            fantasyMovies.searchAndAdd(genreMovie);
+            fantasyMovies.searchAndAddRating(genreMovie);
             return StatusType::SUCCESS;
         case Genre::DRAMA:
-            dramaMovies.searchAndAdd(genreMovie);
+            dramaMovies.searchAndAddRating(genreMovie);
             return StatusType::SUCCESS;
     }
     return StatusType::SUCCESS;
@@ -869,27 +1250,28 @@ StatusType streaming_database::remove_movie(int movieId)
     if(movieId <=0){
         return StatusType::INVALID_INPUT;
     }
-    Node<nodeContainingTree>* curMovie = movies.search(movieId);
+    Node<group_node>* curMovie = movies.search(movieId);
     if(curMovie->key == -1){
         delete curMovie;
         return StatusType::FAILURE;
     }
-
-    switch (curMovie->genre) {
+    switch (curMovie->genre){
         case Genre::COMEDY:
-            comedyMovies.searchAndDelete(movieId);
+            comedyMovies.searchAndDeleteRating(curMovie->rating,curMovie->views,curMovie->content);
             break;
         case Genre::ACTION:
-            actionMovies.searchAndDelete(movieId);
+            actionMovies.searchAndDeleteRating(curMovie->rating,curMovie->views,curMovie->content);
             break;
         case Genre::FANTASY:
-            fantasyMovies.searchAndDelete(movieId);
+            fantasyMovies.searchAndDeleteRating(curMovie->rating,curMovie->views,curMovie->content);
             break;
         case Genre::DRAMA:
-            dramaMovies.searchAndDelete(movieId);
+            dramaMovies.searchAndDeleteRating(curMovie->rating,curMovie->views,curMovie->content);
             break;
     }
-    return movies.searchAndDelete(movieId);
+
+    moviesRating.searchAndDeleteRating(curMovie->rating,curMovie->views,curMovie->content);
+    movies.searchAndDelete(movieId);
 }
 
 StatusType streaming_database::add_user(int userId, bool isVip)
@@ -897,14 +1279,13 @@ StatusType streaming_database::add_user(int userId, bool isVip)
     if(userId <= 0){
         return StatusType::INVALID_INPUT;
     }
-    Node<nodeContainingTree>* user = new Node<nodeContainingTree>(0,userId, nullptr);
+    Node<group_node>* user = new Node<group_node>(0,userId, nullptr);
     if(!user){
         return StatusType::ALLOCATION_ERROR;
     }
-    Node<nodeContainingTree>* ptr = users.searchAndAdd(user);
-    if(ptr->key == -1){
-        delete ptr;
-        return StatusType::FAILURE;
+    StatusType status = users.searchAndAdd(user);
+    if(status != StatusType::SUCCESS){
+        return status;
     }
     user->changeVip(isVip);
     user->changeViews(0);
@@ -924,20 +1305,19 @@ StatusType streaming_database::add_group(int groupId)
     if(groupId <=0){
         return StatusType::INVALID_INPUT;
     }
-    nodeContainingTree* group = new nodeContainingTree(0,groupId, nullptr);
+    group_node* group = new group_node(0,groupId, nullptr);
     if(!group){
         return StatusType::ALLOCATION_ERROR;
     }
-    nodeContainingTree* ptr = groups.searchAndAdd(group);
-    if(ptr->key == -1){
-        delete ptr;
-        return StatusType::FAILURE;
+    StatusType status = groups.searchAndAdd(group);
+    if(status != StatusType::SUCCESS){
+        return status;
     }
     group->views = 0;
     group->isVip = false;
     return StatusType::SUCCESS;
 }
-void incrementAndDelete(Node<nodeContainingTree>* ptr, const nodeContainingTree* group){
+void incrementAndDelete(Node<group_node>* ptr, const group_node* group){
     if(!ptr){
         return;
     }
@@ -959,12 +1339,12 @@ StatusType streaming_database::remove_group(int groupId)
     if(groupId <=0){
         return StatusType::INVALID_INPUT;
     }
-    nodeContainingTree* groupToDelete = groups.search(groupId);
+    group_node* groupToDelete = groups.search(groupId);
     if(groupToDelete->key == -1){
         delete groupToDelete;
         return StatusType::FAILURE;
     }
-    Node<nodeContainingTree>* ptr = groupToDelete->members.getRoot();
+    Node<group_node>* ptr = groupToDelete->members.getRoot();
     incrementAndDelete(ptr, groupToDelete);
     return groups.searchAndDelete(groupId);
 }
@@ -974,7 +1354,7 @@ StatusType streaming_database::add_user_to_group(int userId, int groupId)
     if(userId <=0 || groupId <= 0){
         return StatusType::INVALID_INPUT;
     }
-    Node<nodeContainingTree>* user = users.search(userId); // O(log(n))
+    Node<group_node>* user = users.search(userId); // O(log(n))
     if(user->key == -1){
         delete user;
         return StatusType::FAILURE;
@@ -982,7 +1362,7 @@ StatusType streaming_database::add_user_to_group(int userId, int groupId)
     if(user->curGroup != nullptr){
         return StatusType::FAILURE;
     }
-    nodeContainingTree* group = groups.search(groupId); // O(log(m))
+    group_node* group = groups.search(groupId); // O(log(m))
     if (group->key == -1){
         delete group;
         return StatusType::FAILURE;
@@ -991,7 +1371,7 @@ StatusType streaming_database::add_user_to_group(int userId, int groupId)
     if(!group->isVip && user->isVip){
         group->isVip = true;
     }
-    Node<nodeContainingTree>* groupUser = new Node<nodeContainingTree>(0,userId, nullptr);
+    Node<group_node>* groupUser = new Node<group_node>(0,userId, nullptr);
     if(!groupUser){
         return StatusType::ALLOCATION_ERROR;
     }
@@ -1002,11 +1382,10 @@ StatusType streaming_database::add_user_to_group(int userId, int groupId)
     user->GroupActionViews = group->ActionWatched;
     copyNodeContent(groupUser,user);
     groupUser->groupUser = user;
-    Node<nodeContainingTree>* ptr = group->members.searchAndAdd(groupUser);
-    if(ptr->key == -1){
-        delete ptr;
+    StatusType status = group->members.searchAndAdd(groupUser);
+    if(status != StatusType::SUCCESS){
         delete groupUser;
-        return StatusType::FAILURE;
+        return status;
     }
     return StatusType::SUCCESS;
 }
@@ -1016,12 +1395,12 @@ StatusType streaming_database::user_watch(int userId, int movieId)
     if(userId <= 0 || movieId <= 0){
         return StatusType::INVALID_INPUT;
     }
-    Node<nodeContainingTree>* user = users.search(userId); // O(log(n))
+    Node<group_node>* user = users.search(userId); // O(log(n))
     if(user->key == -1){
         delete user;
         return StatusType::FAILURE;
     }
-    Node<nodeContainingTree>* movie = movies.search(movieId); // O(log(k))
+    Node<group_node>* movie = movies.search(movieId); // O(log(k))
     if(movie->key == -1){
         delete movie;
         return StatusType::FAILURE;
@@ -1029,20 +1408,44 @@ StatusType streaming_database::user_watch(int userId, int movieId)
     if(movie->isVip && !user->isVip){
         return StatusType::FAILURE;
     }
+    StatusType status = moviesRating.searchAndDeleteRating(movie->rating,movie->views,movie->content);
+    if(status != StatusType::SUCCESS){
+        return status;
+    }
     user->views++;
     movie->views++;
+
+    Node<group_node>* curMovie2 = new Node<group_node>(0,movieId, nullptr);
+    copyNodeContent(curMovie2,movie);
+
+    StatusType status2 = moviesRating.searchAndAddRating(curMovie2);
+    if(status != StatusType::SUCCESS){
+        return status;
+    }
+
+
+    Node<group_node>* curMovie = new Node<group_node>(0,movieId, nullptr);
+    copyNodeContent(curMovie,movie);
     switch (movie->genre) {
         case Genre::COMEDY:
             user->ComedyViews++;
+            comedyMovies.searchAndDeleteRating(movie->rating,movie->views-1,movie->content);
+            comedyMovies.searchAndAddRating(curMovie);
             break;
         case Genre::ACTION:
             user->ActionViews++;
+            actionMovies.searchAndDeleteRating(movie->rating,movie->views-1,movie->content);
+            actionMovies.searchAndAddRating(curMovie);
             break;
         case Genre::FANTASY:
             user->FantasyViews++;
+            fantasyMovies.searchAndDeleteRating(movie->rating,movie->views-1,movie->content);
+            fantasyMovies.searchAndAddRating(curMovie);
             break;
         case Genre::DRAMA:
             user->DramaViews++;
+            dramaMovies.searchAndDeleteRating(movie->rating,movie->views-1,movie->content);
+            dramaMovies.searchAndAddRating(curMovie);
             break;
         case Genre::NONE:
             break;
@@ -1055,12 +1458,12 @@ StatusType streaming_database::group_watch(int groupId,int movieId)
     if(groupId <= 0 || movieId <= 0){
         return StatusType::INVALID_INPUT;
     }
-    Node<nodeContainingTree>* movie = movies.search(movieId); // O(log(k))
+    Node<group_node>* movie = movies.search(movieId); // O(log(k))
     if(movie->key == -1){
         delete movie;
         return StatusType::FAILURE;
     }
-    nodeContainingTree* group = groups.search(groupId); // O(log(m))
+    group_node* group = groups.search(groupId); // O(log(m))
     if(group->key == -1){
         delete group;
         return StatusType::FAILURE;
@@ -1068,19 +1471,48 @@ StatusType streaming_database::group_watch(int groupId,int movieId)
     if(movie->isVip && !group->isVip){
         return StatusType::FAILURE;
     }
+    StatusType status = moviesRating.searchAndDeleteRating(movie->rating,movie->views,movie->content);
+    if(status != StatusType::SUCCESS){
+        return status;
+    }
+    movie->views+=group->members.getNumOfNodes();
+
+    Node<group_node>* curMovie2 = new Node<group_node>(0,movieId, nullptr);
+    copyNodeContent(curMovie2,movie);
+
+    StatusType status2 = moviesRating.searchAndAddRating(curMovie2);
+    if(status != StatusType::SUCCESS){
+        return status;
+    }
+
+
+    Node<group_node>* curMovie = new Node<group_node>(0,movieId, nullptr);
+    copyNodeContent(curMovie,movie);
     group->moviesWatched++;
     switch (movie->genre) {
         case Genre::COMEDY:
             group->ComedyWatched++;
+            comedyMovies.searchAndDeleteRating(movie->rating,
+                                               movie->views-group->members.getNumOfNodes(),movie->content);
+            comedyMovies.searchAndAddRating(curMovie);
             break;
         case Genre::ACTION:
             group->ActionWatched++;
+            actionMovies.searchAndDeleteRating(movie->rating,
+                                               movie->views-group->members.getNumOfNodes(),movie->content);
+            actionMovies.searchAndAddRating(curMovie);
             break;
         case Genre::FANTASY:
             group->FantasyWatched++;
+            fantasyMovies.searchAndDeleteRating(movie->rating,
+                                               movie->views-group->members.getNumOfNodes(),movie->content);
+            fantasyMovies.searchAndAddRating(curMovie);
             break;
         case Genre::DRAMA:
             group->DramaWatched++;
+            dramaMovies.searchAndDeleteRating(movie->rating,
+                                               movie->views-group->members.getNumOfNodes(),movie->content);
+            dramaMovies.searchAndAddRating(curMovie);
             break;
         case Genre::NONE:
             break;
@@ -1104,7 +1536,7 @@ output_t<int> streaming_database::get_all_movies_count(Genre genre)
     }
     return output_t<int>(StatusType::ALLOCATION_ERROR);
 }
-void iterate(int* i, int *const output, Node<nodeContainingTree>* ptr){ // not finished
+void iterate(int* i, int *const output, Node<group_node>* ptr){ // not finished
     if(!ptr){
         return;
     }
@@ -1146,7 +1578,7 @@ StatusType streaming_database::get_all_movies(Genre genre, int *const output) //
             iterate(i,output,dramaMovies.getRoot());
             return StatusType::SUCCESS;
         case Genre::NONE:
-            iterate(i,output,movies.getRoot());
+            iterate(i,output,moviesRating.getRoot());
             return StatusType::SUCCESS;
     }
     return StatusType::SUCCESS;
@@ -1157,7 +1589,7 @@ output_t<int> streaming_database::get_num_views(int userId, Genre genre)
     if(userId <= 0 ){
         return output_t<int>{StatusType::INVALID_INPUT};
     }
-    Node<nodeContainingTree>* user = users.search(userId); // O(log(n))
+    Node<group_node>* user = users.search(userId); // O(log(n))
     if(user->key == -1){
         delete user;
         return StatusType::FAILURE;
@@ -1197,12 +1629,12 @@ StatusType streaming_database::rate_movie(int userId, int movieId, int rating)
     if(userId <= 0 || movieId <= 0 || rating > 100 || rating < 0){
         return StatusType::INVALID_INPUT;
     }
-    Node<nodeContainingTree>* user = users.search(userId); // O(log(n))
+    Node<group_node>* user = users.search(userId); // O(log(n))
     if(user->key == -1){
         delete user;
         return StatusType::FAILURE;
     }
-    Node<nodeContainingTree>* movie = movies.search(movieId); // O(log(k))
+    Node<group_node>* movie = movies.search(movieId); // O(log(k))
     if(movie->key == -1){
         delete movie;
         return StatusType::FAILURE;
@@ -1210,6 +1642,54 @@ StatusType streaming_database::rate_movie(int userId, int movieId, int rating)
     if(movie->isVip && !user->isVip){
         return StatusType::FAILURE;
     }
+    double oldRating = movie->rating;
+    StatusType status = moviesRating.searchAndDeleteRating(oldRating,movie->views,movie->content);
+    if(status != StatusType::SUCCESS){
+        return status;
+    }
+
+
+    movie->rating*=movie->usersRated;
+    movie->rating+=rating;
+    movie->usersRated++;
+    movie->rating/=movie->usersRated;
+
+    Node<group_node>* curMovie2 = new Node<group_node>(0,movieId, nullptr);
+    copyNodeContent(curMovie2,movie);
+
+    StatusType status2 = moviesRating.searchAndAddRating(curMovie2);
+    if(status != StatusType::SUCCESS){
+        return status;
+    }
+
+
+    Node<group_node>* curMovie = new Node<group_node>(0,movieId, nullptr);
+    copyNodeContent(curMovie,movie);
+    switch (movie->genre) {
+        case Genre::COMEDY:
+            user->ComedyViews++;
+            comedyMovies.searchAndDeleteRating(oldRating,movie->views,movie->content);
+            comedyMovies.searchAndAddRating(curMovie);
+            break;
+        case Genre::ACTION:
+            user->ActionViews++;
+            actionMovies.searchAndDeleteRating(oldRating,movie->views,movie->content);
+            actionMovies.searchAndAddRating(curMovie);
+            break;
+        case Genre::FANTASY:
+            user->FantasyViews++;
+            fantasyMovies.searchAndDeleteRating(oldRating,movie->views,movie->content);
+            fantasyMovies.searchAndAddRating(curMovie);
+            break;
+        case Genre::DRAMA:
+            user->DramaViews++;
+            dramaMovies.searchAndDeleteRating(oldRating,movie->views-1,movie->content);
+            dramaMovies.searchAndAddRating(curMovie);
+            break;
+        case Genre::NONE:
+            break;
+    }
+
     // still not finished
     return StatusType::SUCCESS;
 }
@@ -1238,14 +1718,33 @@ void print(output_t<int> output){
     }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 int main()
 {
-    AVL_Tree<Node<nodeContainingTree>> avlTree, avlTree2;
+    AVL_Tree<Node<group_node>> avlTree, avlTree2;
     int arr[12]={10,5,12,3,9,11,13,14,2,4, 100, 200};
     int arr2[12]={2,3,4,5,9,10,11,12,13,14, 2000, 17};
     int arr3[12]={14,10,12,10,10,9,5,4,3,2, 87, 900};
     for (int i = 0; i < 12; ++i) {
-        avlTree.searchAndAdd(new Node<nodeContainingTree>(0,arr[i], nullptr));
+        avlTree.searchAndAdd(new Node<group_node>(0,arr[i], nullptr));
         avlTree.printLevelOrder();
         avlTree2.printLevelOrder();
     }
